@@ -18,6 +18,12 @@ def style_slide_background(slide, color=BG_LIGHT):
     fill = bg.fill
     fill.solid()
     fill.fore_color.rgb = color
+    # Top brand bar
+    left, top, width, height = Inches(0), Inches(0), Inches(10), Inches(0.25)
+    bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
+    bar.fill.solid()
+    bar.fill.fore_color.rgb = ACCENT_BLUE
+    bar.line.fill.background()
 
 
 def add_footer(slide, text="Punith C  |  Nov 13, 2025"):
