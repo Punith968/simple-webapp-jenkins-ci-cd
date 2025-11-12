@@ -28,6 +28,8 @@ pipeline {
     stage('Build') {
       steps {
         echo 'Validating folder structure and required files...'
+        // Ensure scripts are executable (safety check for Windows-developed repos)
+        sh 'chmod +x validate.sh deploy.sh || true'
         // validate.sh will exit non-zero if files are missing
         sh './validate.sh'
       }
