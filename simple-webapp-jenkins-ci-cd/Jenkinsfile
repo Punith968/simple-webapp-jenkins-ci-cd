@@ -6,8 +6,10 @@ pipeline {
   environment {
     // Set REPO_URL in Jenkins credentials or pipeline environment if you want the pipeline to clone externally
     REPO_URL = ""
-    DEPLOY_METHOD = "copy" // options: 'copy' or 'docker'
+    DEPLOY_METHOD = "docker" // options: 'copy' or 'docker'
     IMAGE_NAME = "simple-webapp:latest"
+    CONTAINER_NAME = "simple-webapp-demo"
+    WEBAPP_PORT = "8090" // External port for accessing the webapp
   }
 
   stages {
@@ -55,10 +57,16 @@ pipeline {
         dir('simple-webapp-jenkins-ci-cd') {
           script {
             if (env.DEPLOY_METHOD == 'docker') {
-              echo "Building Docker image ${env.IMAGE_NAME} and running container..."
-              sh 'docker build -t ${IMAGE_NAME} .'
-              sh 'docker rm -f simple-web || true'
-              sh 'docker run -d --name simple-web -p 8080:80 ${IMAGE_NAME}'
+              echo "Building Docker image ${env.IMAGE_NAME}..."
+              sh "docker build -t ${env.IMAGE_NAME} ."
+              
+              echo "Stopping and removing old container if exists..."
+              sh "docker rm -f ${env.CONTAINER_NAME} || true"
+              
+              echo "Running new container ${env.CONTAINER_NAME} on port ${env.WEBAPP_PORT}..."
+              sh "docker run -d --name ${env.CONTAINER_NAME} -p ${env.WEBAPP_PORT}:80 ${env.IMAGE_NAME}"
+              
+              echo "Deployment complete! Access the webapp at: http://localhost:${env.WEBAPP_PORT}"
             } else {
               echo 'Deploy method: copy — running deploy.sh (may require sudo)'
               sh 'chmod +x deploy.sh || true'
@@ -72,7 +80,17 @@ pipeline {
 
   post {
     success {
-      echo 'Pipeline completed successfully.'
+      echo '================================================'
+      echo 'Pipeline completed successfully! ✅'
+      echo '================================================'
+      script {
+        if (env.DEPLOY_METHOD == 'docker') {
+          echo "Webapp deployed and running at: http://localhost:${env.WEBAPP_PORT}"
+          echo "Container name: ${env.CONTAINER_NAME}"
+          sh "docker ps | grep ${env.CONTAINER_NAME} || echo 'Container not found'"
+        }
+      }
+      echo '================================================'
       // Example: send email on success (requires email configured in Jenkins)
       // emailext subject: "Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}", body: "Good news!"
     }
