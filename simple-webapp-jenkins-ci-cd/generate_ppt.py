@@ -2,21 +2,63 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
+import os
 
 # Helpers
+
+ACCENT_BLUE = RGBColor(15, 108, 189)   # #0F6CBD
+ACCENT_GREEN = RGBColor(46, 182, 125)  # #2EB67D
+BG_LIGHT = RGBColor(248, 250, 252)
+TEXT_DARK = RGBColor(30, 41, 59)
+
+
+def style_slide_background(slide, color=BG_LIGHT):
+    bg = slide.background
+    fill = bg.fill
+    fill.solid()
+    fill.fore_color.rgb = color
+
+
+def add_footer(slide, text="Punith C  |  Nov 13, 2025"):
+    left, top, width, height = Inches(0.5), Inches(6.8), Inches(9), Inches(0.3)
+    tb = slide.shapes.add_textbox(left, top, width, height)
+    p = tb.text_frame.paragraphs[0]
+    p.text = text
+    p.font.size = Pt(10)
+    p.font.color.rgb = RGBColor(100, 116, 139)
+    p.alignment = PP_ALIGN.RIGHT
+
 
 def add_title_slide(prs, title, subtitle):
     slide_layout = prs.slide_layouts[0]
     slide = prs.slides.add_slide(slide_layout)
+    style_slide_background(slide)
+    # Title
     slide.shapes.title.text = title
+    ttf = slide.shapes.title.text_frame.paragraphs[0].font
+    ttf.size = Pt(38)
+    ttf.bold = True
+    ttf.color.rgb = TEXT_DARK
+    # Subtitle
     slide.placeholders[1].text = subtitle
+    stf = slide.placeholders[1].text_frame.paragraphs[0].font
+    stf.size = Pt(18)
+    stf.color.rgb = ACCENT_BLUE
+    add_footer(slide)
     return slide
 
 
 def add_bullet_slide(prs, title, bullets, notes=None):
     slide_layout = prs.slide_layouts[1]  # Title and Content
     slide = prs.slides.add_slide(slide_layout)
+    style_slide_background(slide)
     slide.shapes.title.text = title
+    # Title style
+    title_font = slide.shapes.title.text_frame.paragraphs[0].font
+    title_font.size = Pt(28)
+    title_font.bold = True
+    title_font.color.rgb = ACCENT_BLUE
     tf = slide.shapes.placeholders[1].text_frame
     tf.clear()
     for i, item in enumerate(bullets):
@@ -27,25 +69,38 @@ def add_bullet_slide(prs, title, bullets, notes=None):
         p.text = item
         p.level = 0
         p.font.size = Pt(20)
+        p.font.color.rgb = TEXT_DARK
     if notes:
         slide.notes_slide.notes_text_frame.text = notes
+    add_footer(slide)
     return slide
 
 
 def add_section_header(prs, title):
     slide_layout = prs.slide_layouts[2]  # Section Header
     slide = prs.slides.add_slide(slide_layout)
+    style_slide_background(slide)
     slide.shapes.title.text = title
+    title_font = slide.shapes.title.text_frame.paragraphs[0].font
+    title_font.size = Pt(32)
+    title_font.bold = True
+    title_font.color.rgb = ACCENT_GREEN
+    add_footer(slide)
     return slide
 
 
 def add_placeholder_image_slide(prs, title, caption):
     slide_layout = prs.slide_layouts[5]  # Title Only
     slide = prs.slides.add_slide(slide_layout)
+    style_slide_background(slide)
     slide.shapes.title.text = title
+    title_font = slide.shapes.title.text_frame.paragraphs[0].font
+    title_font.size = Pt(28)
+    title_font.bold = True
+    title_font.color.rgb = ACCENT_BLUE
     # Draw a placeholder rectangle for where to put screenshots later
     left, top, width, height = Inches(1), Inches(1.8), Inches(8), Inches(4)
-    shape = slide.shapes.add_shape(1, left, top, width, height)  # 1 == MSO_SHAPE.RECTANGLE
+    shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
     fill = shape.fill
     fill.solid()
     fill.fore_color.rgb = RGBColor(230, 230, 230)
@@ -56,7 +111,26 @@ def add_placeholder_image_slide(prs, title, caption):
     tf.text = caption
     tf.paragraphs[0].font.size = Pt(16)
     tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+    add_footer(slide)
     return slide
+
+
+def add_image_slide(prs, title, image_path, placeholder_caption):
+    if image_path and os.path.exists(image_path):
+        slide_layout = prs.slide_layouts[5]  # Title Only
+        slide = prs.slides.add_slide(slide_layout)
+        style_slide_background(slide)
+        slide.shapes.title.text = title
+        title_font = slide.shapes.title.text_frame.paragraphs[0].font
+        title_font.size = Pt(28)
+        title_font.bold = True
+        title_font.color.rgb = ACCENT_BLUE
+        left, top, width, height = Inches(1), Inches(1.5), Inches(8), Inches(4.5)
+        slide.shapes.add_picture(image_path, left, top, width=width, height=height)
+        add_footer(slide)
+        return slide
+    else:
+        return add_placeholder_image_slide(prs, title, placeholder_caption)
 
 
 def main():
@@ -223,11 +297,24 @@ def main():
         ],
     )
 
-    # Slide 15: Screenshots (placeholders)
-    add_placeholder_image_slide(
+    # Slide 15: Screenshots (embed if available, else placeholders)
+    add_image_slide(
         prs,
-        "Screenshots (Replace placeholders)",
-        "1) Jenkins build #10 (4/4 green)  |  2) docker ps (8090→80)  |  3) Browser at http://localhost:8090",
+        "Screenshot: Jenkins Build #10",
+        os.path.join("screenshots", "jenkins_build.png"),
+        "Place Jenkins build screenshot here (4/4 green stages)",
+    )
+    add_image_slide(
+        prs,
+        "Screenshot: Docker Container (8090→80)",
+        os.path.join("screenshots", "docker_ps.png"),
+        "Place 'docker ps' screenshot showing simple-webapp-demo here",
+    )
+    add_image_slide(
+        prs,
+        "Screenshot: App at http://localhost:8090",
+        os.path.join("screenshots", "app_browser.png"),
+        "Place browser screenshot with JS alert here",
     )
 
     # Slide 16: Thank You
