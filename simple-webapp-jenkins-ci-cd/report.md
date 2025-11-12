@@ -1,55 +1,83 @@
-# Case Study: CI/CD Pipeline for a Simple Web App using Jenkins
+# Project Report — simple-webapp-jenkins-ci-cd
 
-**Status**: ✅ COMPLETE - ALL STAGES SUCCESSFUL  
-**Build**: #10 (100% Success Rate)  
-**Deployment**: Production Ready
+**Status**: ✅ COMPLETE — ALL 4 STAGES SUCCESSFUL  
+**Latest Build**: #10 (100% success)  
+**Deployment**: Docker container on port 8090 (production-ready)
 
-Overview
---------
-This case study demonstrates a **complete, production-ready** end-to-end continuous integration and delivery pipeline for a static web application. The repository contains the source for a small landing page and all artifacts required to build, test, and deploy it using Jenkins.
+## Introduction
 
-**Achievement**: Successfully implemented and deployed a fully automated CI/CD pipeline with Docker containerization, achieving 100% success rate across all 4 pipeline stages.
+This project delivers a complete CI/CD pipeline for a simple static web application (HTML/CSS/JS) using Jenkins. The pipeline automates code checkout, validation, testing, and deployment. Deployment is performed via Docker, serving the site through an Nginx container. The solution is designed to be minimal, reproducible, and suitable as a teaching/demo artifact for modern DevOps workflows.
 
-Objectives
-- Show a clear, reproducible pipeline for static web assets.
-- Demonstrate validation steps to catch missing files early.
-- Provide both direct file-copy deployment and containerized deployment options.
+Key outcomes:
+- Fully automated pipeline (Checkout → Build → Test → Deploy) with post-deploy verification
+- Containerized deployment with clean lifecycle management
+- Documentation, scripts, and configuration aligned for repeatable runs
 
-Workflow
---------
-1. Checkout: The pipeline pulls source from the repository (main branch) or uses the workspace when `REPO_URL` is not provided.
-2. Build: Run simple validation to ensure the repository contains the required files (`index.html`, `styles.css`, `script.js`). This prevents wasted work on incomplete check-ins.
-3. Test: Re-run validation or more advanced checks (linting, unit tests, snapshot tests) if present.
-4. Deploy: Two options supported:
-   - Copy deployment: simple copy to `/var/www/html` and service restart (quick for VMs with SSH access).
-   - Docker deployment: build a Docker image with nginx and run the container (portable & reproducible).
-5. Post: Provide success/failure messaging and hooks for notifications.
+## Technologies Used
 
-Advantages
-- Simplicity: small codebase that demonstrates major CI/CD concepts.
-- Flexibility: supports both VM-based and containerized deploys.
-- Reproducibility: Dockerfile ensures identical runtime for served static files.
+- Frontend: HTML5, CSS3, JavaScript (ES6)
+- Web server: Nginx (nginx:alpine base image)
+- Containerization: Docker
+- CI/CD: Jenkins (Declarative Pipeline)
+- Version control: Git (GitHub)
+- OS/Runtime: Windows host with WSL2 Ubuntu 24.04 (Jenkins agent), PowerShell for host commands
 
-Limitations & Next steps
-- Security: `deploy.sh` uses `sudo` — production pipelines should use dedicated deployment agents or orchestrators.
-- Tests: currently limited to file-existence checks. Add automated UI tests with Playwright/Puppeteer and integrate test reports in Jenkins.
-- Registry: extend pipeline to push Docker images to a registry and use image tags based on build numbers.
+## Tools Used
 
-Results
--------
-The pipeline has been successfully implemented and deployed with the following achievements:
-- ✅ All 4 stages operational (Checkout, Build, Test, Deploy)
-- ✅ Docker-based deployment running on port 8090
-- ✅ Application fully functional with verified JavaScript interactivity
-- ✅ 100% automated deployment (zero manual intervention)
-- ✅ Build time: ~15 seconds from commit to running application
-- ✅ Container lifecycle management (automated cleanup and deployment)
+- Jenkins 2.528.2 (Pipeline from SCM)
+- Docker 28.2.2 (daemon + CLI)
+- Git 2.43.0
+- WSL2 (Ubuntu) and Windows PowerShell
+- VS Code (editing), GitHub (remote repo)
+- Optional: docker-compose (local Jenkins + webapp composition)
 
-For comprehensive results, metrics, challenges overcome, and lessons learned, see **[CASE-STUDY-SUMMARY.md](CASE-STUDY-SUMMARY.md)**.
+## Methodology / Implementation Steps
 
-Conclusion
-----------
-This demo provides a compact, real-world starting place for teaching and building CI/CD pipelines with Jenkins. It balances minimalism (easy to grasp and run locally) with realistic options (file-copy deploy vs container deploy).
+1. Project Scaffold
+   - Created static site: `index.html`, `styles.css`, `script.js`
+   - Added pipeline and container artifacts: `Jenkinsfile`, `Dockerfile`, `docker-compose.yml`
+   - Wrote automation scripts: `validate.sh` (checks required files), `deploy.sh` (copy-based alternative)
+   - Initialized Git and pushed to GitHub
 
-**Final Grade**: A+ (Excellent - All objectives met and exceeded)  
-**Project Status**: Production Ready 🚀
+2. Jenkins Pipeline Configuration (Pipeline from SCM)
+   - Repository: `https://github.com/Punith968/simple-webapp-jenkins-ci-cd.git`
+   - Branch: `main`
+   - Script Path: `simple-webapp-jenkins-ci-cd/Jenkinsfile` (to handle nested structure)
+   - Environment vars: `DEPLOY_METHOD=docker`, `CONTAINER_NAME=simple-webapp-demo`, `WEBAPP_PORT=8090`
+
+3. Build and Test Stages (CI)
+   - Ensure scripts are executable on Linux agents (`chmod +x validate.sh deploy.sh` safeguard)
+   - Run `validate.sh` to assert presence of `index.html`, `styles.css`, `script.js`
+   - Fast feedback via clear console logs and non-zero exit on missing files
+
+4. Deploy Stage (CD)
+   - Build Docker image from `Dockerfile` (Nginx serving app assets)
+   - Stop and remove any previous container with the same name
+   - Run container mapping host port 8090 → container port 80
+   - Post actions verify container is running and print access URL
+
+5. Platform and Permissions Hardening
+   - Added Jenkins user to `docker` group and restarted service (no sudo needed)
+   - Pre-pulled `nginx:alpine` to avoid first-build network delays
+   - Used `dir()` wrappers in `Jenkinsfile` to work within nested repo path
+
+6. Documentation and Evidence
+   - Authored `CASE-STUDY-SUMMARY.md`, `DEPLOYMENT-GUIDE.md`, and `DEPLOYMENT-COMPLETION.md`
+   - Recorded final build success and deployment verification steps
+
+## Results
+
+- Pipeline: 4/4 stages green (Checkout, Build, Test, Deploy)
+- Build: #10 finished SUCCESS in ~15 seconds total
+- Deployment: Docker image `simple-webapp:latest` (ID: e54b76dbdf5f)
+- Runtime: Container `simple-webapp-demo` (ID: 1db05a33b511), port mapping `8090:80`
+- Accessibility: App live at `http://localhost:8090` (and WSL IP as applicable)
+- Functionality: JavaScript alert verified — “Hello from the Simple WebApp Jenkins CI/CD demo!”
+
+For comprehensive metrics, challenges overcome, and lessons learned, see: **[CASE-STUDY-SUMMARY.md](CASE-STUDY-SUMMARY.md)**.
+
+---
+
+Prepared on: November 13, 2025  
+Author: Punith C  
+Repository: https://github.com/Punith968/simple-webapp-jenkins-ci-cd
