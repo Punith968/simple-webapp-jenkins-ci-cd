@@ -207,8 +207,9 @@ pipeline {
    - Watch Console Output
 
 4. **Expected Results**
-   - ✅ Checkout, Build, Test stages succeed
-   - ⚠️ Deploy stage fails (needs sudo or Docker)
+   - ✅ All 4 stages succeed (Checkout, Build, Test, Deploy)
+   - ✅ Docker container deployed and accessible at http://localhost:8090
+   - ✅ Application fully functional with verified JavaScript interactivity
 
 ---
 
