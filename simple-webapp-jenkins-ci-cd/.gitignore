@@ -1,0 +1,38 @@
+# .gitignore — ignore typical build artifacts and editor files
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Build
+dist/
+build/
+
+# Temp
+tmp/
+*.tmp
+
+# Environment
+.env
+
+# Docker
+docker-compose.override.yml
+
+# Jenkins
+secrets/
+
+# Others
+*.bak
