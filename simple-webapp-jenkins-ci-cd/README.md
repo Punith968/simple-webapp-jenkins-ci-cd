@@ -11,6 +11,8 @@ This repo provides a minimal static web app and all necessary pipeline and conta
 
 **Status**: ✅ All 4 pipeline stages successful | ✅ Application deployed and running | ✅ 100% functional
 
+> Looking for a single, step-by-step build and implementation doc? See `IMPLEMENTATION-GUIDE.md` for the full technology stack, folder structure, key code listings, local run commands (Windows PowerShell and WSL/Linux/macOS), Jenkins setup, and troubleshooting.
+
 ## 📁 Contents
 
 **Application Files:**
