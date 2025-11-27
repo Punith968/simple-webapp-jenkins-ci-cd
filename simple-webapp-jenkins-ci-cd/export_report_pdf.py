@@ -1,7 +1,7 @@
 import os
 from win32com.client import Dispatch
 
-ROOT = os.getcwd()
+ROOT = os.path.dirname(__file__)
 DOCX = os.path.join(ROOT, 'project_report.docx')
 PDF = os.path.join(ROOT, 'project_report.pdf')
 

@@ -22,6 +22,8 @@ SCREENSHOTS = [
     ("screenshots/app_browser.png", "App at http://localhost:8090 with JS alert"),
 ]
 
+BASE_DIR = os.path.dirname(__file__)
+
 
 def add_title(doc: Document, title: str, subtitle: str = ""):
     p = doc.add_paragraph()
@@ -51,14 +53,34 @@ def add_bullets(doc: Document, items):
 
 
 def try_add_picture(doc: Document, path: str, caption: str):
-    if os.path.exists(path):
-        doc.add_picture(path, width=Inches(6))
+    abs_path = path if os.path.isabs(path) else os.path.join(BASE_DIR, path)
+    if os.path.exists(abs_path):
+        doc.add_picture(abs_path, width=Inches(6))
         cap = doc.add_paragraph(caption)
         cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         cap.runs[0].italic = True
     else:
-        p = doc.add_paragraph(f"[Add screenshot: {caption} — missing file {path}]")
+        p = doc.add_paragraph(f"[Add screenshot: {caption} — missing file {abs_path}]")
         p.runs[0].italic = True
+
+
+def add_code_block(doc: Document, title: str, relative_path: str, max_lines: int = 200):
+    add_h2(doc, title)
+    file_path = relative_path if os.path.isabs(relative_path) else os.path.join(BASE_DIR, relative_path)
+    if not os.path.exists(file_path):
+        p = doc.add_paragraph(f"[Missing file: {file_path}]")
+        p.runs[0].italic = True
+        return
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        lines = f.read().splitlines()
+    if len(lines) > max_lines:
+        lines = lines[:max_lines] + ["... (truncated)"]
+    # Add as monospaced paragraphs
+    para = doc.add_paragraph()
+    for i, line in enumerate(lines):
+        run = para.add_run(line + ("\n" if i < len(lines)-1 else ""))
+        run.font.name = 'Courier New'
+        run.font.size = Pt(9)
 
 
 def build_document():
@@ -166,6 +188,22 @@ def build_document():
     for path, caption in SCREENSHOTS:
         try_add_picture(doc, path, caption)
 
+    # Source Code Overview
+    add_h1(doc, "Source Code Overview")
+    add_bullets(doc, [
+        "Jenkinsfile — Declarative pipeline (4 stages + post)",
+        "Dockerfile — Nginx-based static site image",
+        "validate.sh — Pre-deploy file checks",
+        "deploy.sh — Copy-based deploy alternative",
+        "index.html, styles.css, script.js — Static app",
+    ])
+
+    # Selected Code Listings
+    add_h1(doc, "Selected Code Listings")
+    add_code_block(doc, "Jenkinsfile", "Jenkinsfile", max_lines=300)
+    add_code_block(doc, "Dockerfile", "Dockerfile", max_lines=200)
+    add_code_block(doc, "validate.sh", "validate.sh", max_lines=200)
+
     # Challenges & Resolutions
     add_h1(doc, "Challenges & Resolutions")
     add_bullets(doc, [
@@ -206,7 +244,7 @@ def build_document():
     doc.add_paragraph("docker run -d --name simple-webapp-demo -p 8090:80 simple-webapp:latest")
     doc.add_paragraph("./validate.sh")
 
-    out_path = os.path.join(os.getcwd(), "project_report.docx")
+    out_path = os.path.join(BASE_DIR, "project_report.docx")
     doc.save(out_path)
     print("Saved:", out_path)
 
