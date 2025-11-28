@@ -6,7 +6,7 @@ pipeline {
   environment {
     // Set REPO_URL in Jenkins credentials or pipeline environment if you want the pipeline to clone externally
     REPO_URL = ""
-    DEPLOY_METHOD = "docker" // options: 'copy' or 'docker'
+    DEPLOY_METHOD = "copy" // options: 'copy' or 'docker'
     IMAGE_NAME = "simple-webapp:latest"
     CONTAINER_NAME = "simple-webapp-demo"
     WEBAPP_PORT = "8090" // External port for accessing the webapp
