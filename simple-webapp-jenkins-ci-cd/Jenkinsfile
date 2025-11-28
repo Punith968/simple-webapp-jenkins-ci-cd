@@ -65,9 +65,9 @@ pipeline {
               
               echo "Deployment complete! Access the webapp at: http://localhost:${env.WEBAPP_PORT}"
             } else {
-              echo 'Deploy method: copy — running deploy.sh'
+              echo 'Deploy method: copy — user-space Python server deploy'
               sh 'chmod +x deploy.sh || true'
-              sh 'sudo -n -E bash ./deploy.sh || bash ./deploy.sh || true'
+              sh 'WEBAPP_PORT=${WEBAPP_PORT} bash ./deploy.sh'
             }
           }
         }

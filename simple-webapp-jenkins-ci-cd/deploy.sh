@@ -1,32 +1,15 @@
 #!/usr/bin/env bash
-# deploy.sh — simple deployment script that copies site files to /var/www/html
-# Usage: sudo ./deploy.sh
+# deploy.sh — user-space deployment: copies site files to $HOME/published_site
+# and serves them via a background Python HTTP server on WEBAPP_PORT (default 8090).
 
 set -euo pipefail
 
-# Directory containing site files (assumes script is run from project root)
 SITE_SRC_DIR="$(pwd)"
-TARGET_DIR="/var/www/html"
+TARGET_DIR="${HOME}/published_site"
+PORT="${WEBAPP_PORT:-8090}"
 
 # Prefer systemd-managed services if available
-restart_service() {
-  if command -v systemctl >/dev/null 2>&1; then
-    if systemctl list-units --type=service | grep -q nginx; then
-      echo "Restarting nginx via systemctl"
-      sudo systemctl restart nginx
-      return 0
-    elif systemctl list-units --type=service | grep -q apache2; then
-      echo "Restarting apache2 via systemctl"
-      sudo systemctl restart apache2
-      return 0
-    fi
-  fi
-
-  # Fallbacks
-  if command -v service >/dev/null 2>&1; then
-    sudo service nginx restart || sudo service apache2 restart || true
-  fi
-}
+# No root-restart logic needed for user-space serving
 
 # Validate files before copying
 if [ ! -f "${SITE_SRC_DIR}/index.html" ] || [ ! -f "${SITE_SRC_DIR}/styles.css" ] || [ ! -f "${SITE_SRC_DIR}/script.js" ]; then
@@ -34,21 +17,17 @@ if [ ! -f "${SITE_SRC_DIR}/index.html" ] || [ ! -f "${SITE_SRC_DIR}/styles.css" 
   exit 1
 fi
 
-# Create target dir if missing and copy files
-echo "Deploying files to ${TARGET_DIR}..."
+echo "Deploying to user space directory ${TARGET_DIR}..."
 mkdir -p "${TARGET_DIR}"
 cp -r "${SITE_SRC_DIR}"/* "${TARGET_DIR}/"
 
-# Ensure proper ownership (www-data common, fallback to nobody)
-if id -u www-data >/dev/null 2>&1; then
-  echo "Setting ownership to www-data"
-  chown -R www-data:www-data "${TARGET_DIR}" 2>/dev/null || true
-else
-  echo "Setting ownership to nobody:nogroup"
-  chown -R nobody:nogroup "${TARGET_DIR}" 2>/dev/null || true
+# Stop any existing Python server on the port
+if pgrep -f "python3 -m http.server ${PORT}" >/dev/null 2>&1; then
+  echo "Stopping previous python server on port ${PORT}"
+  pkill -f "python3 -m http.server ${PORT}" || true
 fi
 
-sudo -n systemctl restart nginx 2>/dev/null || sudo -n service nginx restart 2>/dev/null || true
-restart_service
+echo "Starting python server on port ${PORT} serving ${TARGET_DIR}..."
+nohup python3 -m http.server "${PORT}" --directory "${TARGET_DIR}" >/dev/null 2>&1 &
 
-echo "Deployment complete. Files copied to ${TARGET_DIR}."
+echo "Deployment complete. Access the site at http://localhost:${PORT}" 
