@@ -30,39 +30,45 @@ pipeline {
 
     stage('Build') {
       steps {
-        echo 'Validating folder structure and required files...'
-        // Ensure scripts are executable (safety check for Windows-developed repos)
-        sh 'chmod +x validate.sh deploy.sh || true'
-        // validate.sh will exit non-zero if files are missing
-        sh './validate.sh'
+        dir('simple-webapp-jenkins-ci-cd') {
+          echo 'Validating folder structure and required files...'
+          // Ensure scripts are executable (safety check for Windows-developed repos)
+          sh 'chmod +x validate.sh deploy.sh || true'
+          // validate.sh will exit non-zero if files are missing
+          sh './validate.sh'
+        }
       }
     }
 
     stage('Test') {
       steps {
-        echo 'Running simple tests (file existence) — validate.sh'
-        sh './validate.sh'
+        dir('simple-webapp-jenkins-ci-cd') {
+          echo 'Running simple tests (file existence) — validate.sh'
+          sh './validate.sh'
+        }
       }
     }
 
     stage('Deploy') {
       steps {
-        script {
-          if (env.DEPLOY_METHOD == 'docker') {
-            echo "Building Docker image ${env.IMAGE_NAME}..."
-            sh "docker build -t ${env.IMAGE_NAME} ."
-            
-            echo "Stopping and removing old container if exists..."
-            sh "docker rm -f ${env.CONTAINER_NAME} || true"
-            
-            echo "Running new container ${env.CONTAINER_NAME} on port ${env.WEBAPP_PORT}..."
-            sh "docker run -d --name ${env.CONTAINER_NAME} -p ${env.WEBAPP_PORT}:80 ${env.IMAGE_NAME}"
-            
-            echo "Deployment complete! Access the webapp at: http://localhost:${env.WEBAPP_PORT}"
-          } else {
-            echo 'Deploy method: copy — running deploy.sh (may require sudo)'
-            sh 'chmod +x deploy.sh || true'
-            sh './deploy.sh'
+        dir('simple-webapp-jenkins-ci-cd') {
+          script {
+            if (env.DEPLOY_METHOD == 'docker') {
+              echo "Building Docker image ${env.IMAGE_NAME}..."
+              sh "docker build -t ${env.IMAGE_NAME} ."
+              
+              echo "Stopping and removing old container if exists..."
+              sh "docker rm -f ${env.CONTAINER_NAME} || true"
+              
+              echo "Running new container ${env.CONTAINER_NAME} on port ${env.WEBAPP_PORT}..."
+              sh "docker run -d --name ${env.CONTAINER_NAME} -p ${env.WEBAPP_PORT}:80 ${env.IMAGE_NAME}"
+              
+              echo "Deployment complete! Access the webapp at: http://localhost:${env.WEBAPP_PORT}"
+            } else {
+              echo 'Deploy method: copy — running deploy.sh (may require sudo)'
+              sh 'chmod +x deploy.sh || true'
+              sh './deploy.sh'
+            }
           }
         }
       }
