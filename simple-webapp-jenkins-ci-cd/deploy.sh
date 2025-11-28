@@ -7,6 +7,7 @@ set -euo pipefail
 SITE_SRC_DIR="$(pwd)"
 TARGET_DIR="${HOME}/published_site"
 PORT="${WEBAPP_PORT:-8090}"
+HOST="${BIND_HOST:-0.0.0.0}"
 
 # Prefer systemd-managed services if available
 # No root-restart logic needed for user-space serving
@@ -27,7 +28,10 @@ if pgrep -f "python3 -m http.server ${PORT}" >/dev/null 2>&1; then
   pkill -f "python3 -m http.server ${PORT}" || true
 fi
 
-echo "Starting python server on port ${PORT} serving ${TARGET_DIR}..."
-nohup python3 -m http.server "${PORT}" --directory "${TARGET_DIR}" >/dev/null 2>&1 &
+echo "Starting python server on ${HOST}:${PORT} serving ${TARGET_DIR}..."
+nohup python3 -m http.server "${PORT}" --bind "${HOST}" --directory "${TARGET_DIR}" >/dev/null 2>&1 &
+
+echo "Active listening sockets (filtered by ${PORT}):"
+ss -tlnp 2>/dev/null | grep ":${PORT}" || netstat -tln 2>/dev/null | grep ":${PORT}" || true
 
 echo "Deployment complete. Access the site at http://localhost:${PORT}" 

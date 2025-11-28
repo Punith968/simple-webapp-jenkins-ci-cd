@@ -10,6 +10,7 @@ pipeline {
     IMAGE_NAME = "simple-webapp:latest"
     CONTAINER_NAME = "simple-webapp-demo"
     WEBAPP_PORT = "8090" // External port for accessing the webapp
+    BIND_HOST = "0.0.0.0" // Bind address for user-space Python server
   }
 
   stages {
@@ -67,7 +68,7 @@ pipeline {
             } else {
               echo 'Deploy method: copy — user-space Python server deploy'
               sh 'chmod +x deploy.sh || true'
-              sh 'WEBAPP_PORT=${WEBAPP_PORT} bash ./deploy.sh'
+              sh 'WEBAPP_PORT=${WEBAPP_PORT} BIND_HOST=${BIND_HOST} bash ./deploy.sh'
             }
           }
         }
