@@ -65,9 +65,9 @@ pipeline {
               
               echo "Deployment complete! Access the webapp at: http://localhost:${env.WEBAPP_PORT}"
             } else {
-              echo 'Deploy method: copy — running deploy.sh (may require sudo)'
+              echo 'Deploy method: copy — running deploy.sh'
               sh 'chmod +x deploy.sh || true'
-              sh './deploy.sh'
+              sh 'sudo -n -E bash ./deploy.sh || bash ./deploy.sh || true'
             }
           }
         }

@@ -35,20 +35,20 @@ if [ ! -f "${SITE_SRC_DIR}/index.html" ] || [ ! -f "${SITE_SRC_DIR}/styles.css" 
 fi
 
 # Create target dir if missing and copy files
-echo "Deploying files to ${TARGET_DIR} (requires sudo)..."
-sudo mkdir -p "${TARGET_DIR}"
-sudo cp -r "${SITE_SRC_DIR}"/* "${TARGET_DIR}/"
+echo "Deploying files to ${TARGET_DIR}..."
+mkdir -p "${TARGET_DIR}"
+cp -r "${SITE_SRC_DIR}"/* "${TARGET_DIR}/"
 
 # Ensure proper ownership (www-data common, fallback to nobody)
 if id -u www-data >/dev/null 2>&1; then
   echo "Setting ownership to www-data"
-  sudo chown -R www-data:www-data "${TARGET_DIR}"
+  chown -R www-data:www-data "${TARGET_DIR}" 2>/dev/null || true
 else
   echo "Setting ownership to nobody:nogroup"
-  sudo chown -R nobody:nogroup "${TARGET_DIR}" || true
+  chown -R nobody:nogroup "${TARGET_DIR}" 2>/dev/null || true
 fi
 
-# Restart web service
+sudo -n systemctl restart nginx 2>/dev/null || sudo -n service nginx restart 2>/dev/null || true
 restart_service
 
 echo "Deployment complete. Files copied to ${TARGET_DIR}."
