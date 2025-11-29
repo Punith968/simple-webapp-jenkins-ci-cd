@@ -11,6 +11,9 @@ pipeline {
     CONTAINER_NAME = "simple-webapp-demo"
     WEBAPP_PORT = "8090" // External port for accessing the webapp
     BIND_HOST = "0.0.0.0" // Bind address for user-space Python server
+    // For S3 deploys (set these in Jenkins as appropriate)
+    S3_BUCKET = ""        // e.g., my-unique-bucket-name
+    AWS_REGION = "us-east-1"
   }
 
   stages {
@@ -19,11 +22,11 @@ pipeline {
         script {
           if (env.REPO_URL?.trim()) {
             echo "Cloning from ${env.REPO_URL} (branch: main)..."
-            sh 'git clone --branch main ${REPO_URL} repo || true'
-            dir('repo') { sh 'ls -la' }
+            bat 'git clone --branch main %REPO_URL% repo || exit 0'
+            dir('repo') { bat 'dir' }
           } else {
             echo 'REPO_URL not set — using current workspace contents.'
-            sh 'pwd && ls -la'
+            bat 'cd && dir'
           }
         }
       }
@@ -33,10 +36,7 @@ pipeline {
       steps {
         dir('simple-webapp-jenkins-ci-cd') {
           echo 'Validating folder structure and required files...'
-          // Ensure scripts are executable (safety check for Windows-developed repos)
-          sh 'chmod +x validate.sh deploy.sh || true'
-          // validate.sh will exit non-zero if files are missing
-          sh './validate.sh'
+          bat 'validate.bat'
         }
       }
     }
@@ -44,8 +44,8 @@ pipeline {
     stage('Test') {
       steps {
         dir('simple-webapp-jenkins-ci-cd') {
-          echo 'Running simple tests (file existence) — validate.sh'
-          sh './validate.sh'
+          echo 'Running simple tests (file existence) — validate.bat'
+          bat 'validate.bat'
         }
       }
     }
@@ -55,20 +55,12 @@ pipeline {
         dir('simple-webapp-jenkins-ci-cd') {
           script {
             if (env.DEPLOY_METHOD == 'docker') {
-              echo "Building Docker image ${env.IMAGE_NAME}..."
-              sh "docker build -t ${env.IMAGE_NAME} ."
-              
-              echo "Stopping and removing old container if exists..."
-              sh "docker rm -f ${env.CONTAINER_NAME} || true"
-              
-              echo "Running new container ${env.CONTAINER_NAME} on port ${env.WEBAPP_PORT}..."
-              sh "docker run -d --name ${env.CONTAINER_NAME} -p ${env.WEBAPP_PORT}:80 ${env.IMAGE_NAME}"
-              
-              echo "Deployment complete! Access the webapp at: http://localhost:${env.WEBAPP_PORT}"
+              echo "Docker deploy not supported on Windows in this pipeline."
+            } else if (env.DEPLOY_METHOD == 's3') {
+              echo "S3 deploy not supported on Windows in this pipeline."
             } else {
-              echo 'Deploy method: copy — user-space Python server deploy'
-              sh 'chmod +x deploy.sh || true'
-              sh 'WEBAPP_PORT=${WEBAPP_PORT} BIND_HOST=${BIND_HOST} bash ./deploy.sh'
+              echo 'Deploy method: copy — Windows batch deploy'
+              bat 'deploy.bat'
             }
           }
         }
