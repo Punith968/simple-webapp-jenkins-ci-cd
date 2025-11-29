@@ -1,0 +1,39 @@
+/* styles.css — Basic styling for the Simple WebApp demo */
+
+:root {
+  --bg: #f6f8fa;
+  --card: #ffffff;
+  --accent: #007bff;
+  --text: #222;
+}
+
+* { box-sizing: border-box; }
+html,body { height: 100%; margin: 0; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color: var(--text); background: var(--bg); }
+
+.container {
+  max-width: 680px;
+  margin: 6vh auto;
+  background: var(--card);
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(16,24,40,0.06);
+  text-align: center;
+}
+
+h1 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+.lead { margin: 0 0 1rem; color: #444; }
+.content { margin-top: 1rem; }
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.05rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+.btn:hover { background: #0056d6; }
+
+footer { margin-top: 1.6rem; color: #666; font-size: 0.875rem; }
